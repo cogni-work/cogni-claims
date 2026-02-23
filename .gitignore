@@ -1,0 +1,9 @@
+# Runtime state (created per-project, not part of plugin)
+.claims/
+
+# Validation and test artifacts
+.test-results/
+.validation/
+
+# Plugin settings (user-specific)
+.claude/*.local.md

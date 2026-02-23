@@ -1,0 +1,28 @@
+{
+  "name": "cogni-claims",
+  "version": "0.1.0",
+  "description": "Claim verification and management system. Verifies sourced claims against their cited URLs, detects deviations, and guides users through resolution. Cross-plugin contract for claim lifecycle tracking.",
+  "author": {
+    "name": "Stephan de Haas",
+    "email": "stephan@cogni-work.ai"
+  },
+  "license": "CC-BY-NC-SA-4.0",
+  "keywords": [
+    "claim-verification",
+    "fact-checking",
+    "source-validation",
+    "deviation-detection",
+    "cross-plugin-contract"
+  ],
+  "skills": [
+    "./skills/claim-entity",
+    "./skills/claims"
+  ],
+  "agents": [
+    "./agents/claim-verifier.md",
+    "./agents/source-inspector.md"
+  ],
+  "commands": [
+    "./commands/claims.md"
+  ]
+}

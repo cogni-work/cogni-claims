@@ -6,6 +6,33 @@ A Claude Cowork plugin for claim verification and management.
 
 Plugins that rely on web search produce sourced claims that may deviate from what sources actually say. Users need a systematic way to verify, track, and resolve these discrepancies.
 
+## Installation
+
+```bash
+claude --plugin-dir /path/to/cogni-claims
+```
+
+## Usage
+
+```bash
+/claims submit "The AI market will reach $1.8T by 2030" --source "https://example.com/report" --title "AI Forecast"
+/claims verify
+/claims dashboard
+/claims inspect claim-abc123
+/claims resolve claim-abc123
+```
+
+## Components
+
+| Type | Name | Purpose |
+|------|------|---------|
+| Skill | `claim-entity` | Cross-plugin contract (ClaimEntity schema, workspace conventions) |
+| Skill | `claims` | Main orchestrator (ingestion, verification, dashboard, resolution) |
+| Agent | `claim-verifier` | Worker: fetches one source URL, verifies all claims against it |
+| Agent | `source-inspector` | Browser: opens source page, highlights relevant passage |
+| Command | `/claims` | User entry point with 5 modes: submit, verify, dashboard, inspect, resolve |
+| Script | `claims-store.sh` | JSON state management (init, gen-id, url-hash, read/count claims) |
+
 ## Capabilities
 
 ### Claim Ingestion
@@ -42,7 +69,7 @@ The user is the authority — the system provides evidence, the user decides.
 
 ### Source Inspection
 
-Users can navigate to the source page with the relevant passage highlighted to judge deviations in context before deciding.
+Users can navigate to the source page with the relevant passage highlighted to judge deviations in context before deciding. Uses WebFetch by default, falls back to browser automation for JS-rendered or paywalled pages.
 
 ### Claim Lifecycle Tracking
 
@@ -57,6 +84,31 @@ A `ClaimEntity` schema (claim record + deviation record + resolution record) is 
 - Querying all claims by submitting plugin
 
 Fetched sources are cached to avoid redundant retrieval.
+
+## Data Storage
+
+Claim state is stored within the calling project's workspace:
+
+```
+{project}/.claims/
+├── claims.json          # Registry of all claims
+├── sources/{hash}.json  # Cached source content per URL
+└── history/{id}.json    # Audit trail per claim
+```
+
+## Cross-Plugin Integration
+
+Other plugins submit claims by invoking `cogni-claims:claims` with mode `submit`:
+
+```
+Parameters:
+  mode: "submit"
+  working_dir: "/path/to/project"
+  submitted_by: "cogni-research"
+  claims: [{statement, source_url, source_title}, ...]
+```
+
+See the `claim-entity` skill and `references/schema.md` for the full ClaimEntity contract.
 
 ## Quality Constraints
 
