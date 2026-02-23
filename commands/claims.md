@@ -1,8 +1,11 @@
 ---
 name: claims
 description: Manage claim verification lifecycle — submit, verify, review dashboard, inspect, and resolve claims
+usage: /claims <mode> [options] — modes: submit, verify, dashboard, inspect, resolve
 argument-hint: "<mode> [options]"
-allowed-tools: ["Read", "Write", "Bash", "Task", "AskUserQuestion", "WebFetch", "Glob", "Grep"]
+aliases: [claim, verify-claims]
+category: verification
+allowed-tools: ["Read", "Write", "Bash", "Task", "AskUserQuestion", "WebFetch", "Glob", "Grep", "Skill"]
 ---
 
 # Claims Command

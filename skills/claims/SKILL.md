@@ -176,7 +176,7 @@ Guide the user through resolving a deviated claim.
 
 ### Scripts
 
-- **`scripts/claims-store.sh`** — JSON state management utility for reading/writing claims registry, generating IDs and URL hashes
+- **`scripts/claims-store.sh`** — JSON state management utility for reading/writing claims registry, generating IDs and URL hashes. Invoke via: `bash "${CLAUDE_PLUGIN_ROOT}/skills/claims/scripts/claims-store.sh" <command> [args...]`
 
 ### Cross-Plugin Contract
 

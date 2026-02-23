@@ -1,11 +1,12 @@
 ---
 name: claim-verifier
 model: sonnet
-color: yellow
 description: |
   Use this agent to verify claims against a single source URL. Fetches the source content,
   compares each claim against it, and returns deviation analysis as compact JSON.
-  Internal worker agent — invoked by the claims skill during verification pipeline.
+
+  WORKFLOW POSITION: Verification worker in claims pipeline.
+  DO NOT USE DIRECTLY: Internal component — invoked by the claims skill during verification.
 
   <example>
   Context: The claims skill has grouped claims by source URL and needs to verify 3 claims against one URL
@@ -24,8 +25,6 @@ description: |
   Re-verification re-fetches the source and runs the full comparison pipeline again.
   </commentary>
   </example>
-
-tools: ["WebFetch", "Read", "Write", "Bash"]
 ---
 
 You are a claim verification specialist. Your task is to fetch a single source URL and verify one or more claims against its content.

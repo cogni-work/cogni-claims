@@ -94,7 +94,8 @@ ENDJSON
       exit 1
     fi
     # Check if claims array is non-empty (portable JSON check)
-    if grep -q '"claims":\s*\[\s*\]' "$CLAIMS_FILE" 2>/dev/null; then
+    # Use extended regex for \s portability across grep implementations
+    if grep -qE '"claims" *: *\[ *\]' "$CLAIMS_FILE" 2>/dev/null; then
       exit 1
     fi
     exit 0
@@ -109,15 +110,18 @@ ENDJSON
       exit 1
     fi
     # Count statuses using grep (portable, no jq dependency)
-    UNVERIFIED=$(grep -c '"status": *"unverified"' "$CLAIMS_FILE" 2>/dev/null || true)
+    # Match only top-level "status" fields (indented, not inside string values)
+    # Pattern: line starts with whitespace + "status" key — avoids matching status
+    # words inside source_excerpt or explanation strings
+    UNVERIFIED=$(grep -cE '^ *"status" *: *"unverified"' "$CLAIMS_FILE" 2>/dev/null || true)
     UNVERIFIED=${UNVERIFIED:-0}
-    VERIFIED=$(grep -c '"status": *"verified"' "$CLAIMS_FILE" 2>/dev/null || true)
+    VERIFIED=$(grep -cE '^ *"status" *: *"verified"' "$CLAIMS_FILE" 2>/dev/null || true)
     VERIFIED=${VERIFIED:-0}
-    DEVIATED=$(grep -c '"status": *"deviated"' "$CLAIMS_FILE" 2>/dev/null || true)
+    DEVIATED=$(grep -cE '^ *"status" *: *"deviated"' "$CLAIMS_FILE" 2>/dev/null || true)
     DEVIATED=${DEVIATED:-0}
-    UNAVAILABLE=$(grep -c '"status": *"source_unavailable"' "$CLAIMS_FILE" 2>/dev/null || true)
+    UNAVAILABLE=$(grep -cE '^ *"status" *: *"source_unavailable"' "$CLAIMS_FILE" 2>/dev/null || true)
     UNAVAILABLE=${UNAVAILABLE:-0}
-    RESOLVED=$(grep -c '"status": *"resolved"' "$CLAIMS_FILE" 2>/dev/null || true)
+    RESOLVED=$(grep -cE '^ *"status" *: *"resolved"' "$CLAIMS_FILE" 2>/dev/null || true)
     RESOLVED=${RESOLVED:-0}
     TOTAL=$((UNVERIFIED + VERIFIED + DEVIATED + UNAVAILABLE + RESOLVED))
     echo "{\"total\":$TOTAL,\"unverified\":$UNVERIFIED,\"verified\":$VERIFIED,\"deviated\":$DEVIATED,\"source_unavailable\":$UNAVAILABLE,\"resolved\":$RESOLVED}"
