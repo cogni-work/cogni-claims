@@ -5,7 +5,6 @@ description: |
   "submit claims", "query claim status", "claim data model", "claim contract",
   "deviation types", "resolution actions", or integrate with the cogni-claims verification system.
   Internal contract definition — provides the cross-plugin data model for claim lifecycle management.
-version: 1.0.0
 ---
 
 # ClaimEntity Contract
@@ -16,47 +15,25 @@ Define the cross-plugin data model for claim verification and lifecycle manageme
 
 ## Core Data Model
 
-Three record types compose the claim lifecycle:
+Three record types compose the claim lifecycle. For complete field definitions and examples, see `references/schema.md`.
 
 ### ClaimRecord
 
-Represents a single verifiable claim with its current state.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | `claim-<uuid-v4>` — auto-assigned |
-| `statement` | string | The claim text |
-| `source_url` | string | URL of cited source |
-| `source_title` | string | Human-readable source title |
-| `submitted_by` | string | Plugin name (e.g., `cogni-research`) |
-| `status` | enum | `unverified` / `verified` / `deviated` / `source_unavailable` / `resolved` |
-| `deviations` | array | DeviationRecord[] — empty if clean |
-| `resolution` | object\|null | ResolutionRecord when resolved |
-| `source_excerpt` | string\|null | Verbatim excerpt supporting or contradicting |
+A single verifiable claim with its current state. Key fields: `id`, `statement`, `source_url`, `source_title`, `submitted_by`, `status`, `deviations[]`, `resolution`.
 
 ### DeviationRecord
 
-Represents a specific discrepancy between claim and source.
+A specific discrepancy between claim and source. Key fields: `type`, `severity`, `source_excerpt`, `explanation`.
 
-**Deviation types:**
-- `misquotation` — claim misrepresents source wording
-- `unsupported_conclusion` — claim draws unsupported inference
-- `selective_omission` — claim omits meaning-changing context
-- `data_staleness` — claim uses outdated source data
-- `source_contradiction` — source directly contradicts claim
+**Deviation types:** `misquotation`, `unsupported_conclusion`, `selective_omission`, `data_staleness`, `source_contradiction`
 
 **Severity levels:** `low`, `medium`, `high`, `critical`
 
 ### ResolutionRecord
 
-Records the user's decision on a deviated claim.
+The user's decision on a deviated claim. Key fields: `action`, `corrected_statement`, `rationale`.
 
-**Resolution actions:**
-- `corrected` — claim text updated to match source
-- `disputed` — user disputes the deviation finding
-- `alternative_source` — user provides different source
-- `discarded` — claim removed from consideration
-- `accepted_override` — user keeps claim despite deviation
+**Resolution actions:** `corrected`, `disputed`, `alternative_source`, `discarded`, `accepted_override`
 
 ## Status Lifecycle
 
@@ -79,27 +56,9 @@ Claim state persists in the calling project's `.claims/` directory:
 └── history/{id}.json    # Audit trail per claim
 ```
 
-## Cross-Plugin Submission
+## Cross-Plugin Integration
 
-To submit claims from another plugin, invoke `cogni-claims:claims` skill with mode `submit`:
-
-```
-Parameters:
-  mode: "submit"
-  working_dir: "/path/to/project"
-  submitted_by: "plugin-name"
-  claims: [{statement, source_url, source_title}, ...]
-```
-
-To query results, invoke with mode `query`:
-
-```
-Parameters:
-  mode: "query"
-  working_dir: "/path/to/project"
-  query_type: "by_id" | "by_plugin" | "by_status"
-  query_value: "<claim-id>" | "<plugin-name>" | "<status>"
-```
+To submit or query claims from another plugin, invoke `cogni-claims:claims` skill. See `references/schema.md` for batch submission format and query interfaces.
 
 ## Hard Rules
 
@@ -111,8 +70,5 @@ Parameters:
 
 ## Additional Resources
 
-### Reference Files
-
-For complete schema details with all field definitions and examples:
-- **`references/schema.md`** — Full JSON schema, field tables, deviation type definitions, severity criteria
+- **`references/schema.md`** — Full JSON schema, field tables, deviation type definitions, severity criteria, batch submission format, query interfaces
 - **`references/workspace-conventions.md`** — Directory structure, file formats, initialization, caching rules
