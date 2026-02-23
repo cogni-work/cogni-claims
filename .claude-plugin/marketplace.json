@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "cogni-claims",
-      "source": "./cogni-claims",
+      "source": "./",
       "description": "Claim verification and management system. Verifies sourced claims against their cited URLs, detects deviations, and guides users through resolution. Cross-plugin contract for claim lifecycle tracking."
     }
   ]
