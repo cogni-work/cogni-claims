@@ -1,0 +1,17 @@
+{
+  "name": "cogni-claims",
+  "version": "0.1.2",
+  "description": "Claim verification and management system. Verifies sourced claims against their cited URLs, detects deviations, and guides users through resolution.",
+  "license": "CC-BY-NC-SA-4.0",
+  "owner": {
+    "name": "Stephan de Haas",
+    "email": "stephan@cogni-work.ai"
+  },
+  "plugins": [
+    {
+      "name": "cogni-claims",
+      "source": "./cogni-claims",
+      "description": "Claim verification and management system. Verifies sourced claims against their cited URLs, detects deviations, and guides users through resolution. Cross-plugin contract for claim lifecycle tracking."
+    }
+  ]
+}
