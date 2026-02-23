@@ -14,6 +14,10 @@
 #
 # All output is JSON on stdout. Errors go to stderr.
 # Compatible with bash 3.2 (macOS default).
+#
+# JSON FORMAT ASSUMPTION: This script expects pretty-printed JSON with one
+# field per line (as produced by Claude's Write tool). Minified single-line
+# JSON will cause incorrect results in has-claims and count-by-status.
 
 set -euo pipefail
 

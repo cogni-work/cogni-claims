@@ -1,10 +1,13 @@
 ---
 name: claim-entity
+version: 1.0.0
 description: |
-  This skill should be used when any plugin needs to understand the ClaimEntity schema,
-  "submit claims", "query claim status", "claim data model", "claim contract",
-  "deviation types", "resolution actions", or integrate with the cogni-claims verification system.
-  Internal contract definition — provides the cross-plugin data model for claim lifecycle management.
+  This skill should be used when any plugin or agent needs to understand the ClaimEntity schema,
+  "claim data model", "claim schema", "ClaimRecord fields", "DeviationRecord structure",
+  "claim contract", "deviation types", "deviation severity levels", "resolution actions",
+  "claim status transitions", "claim lifecycle states", or "workspace .claims directory layout".
+  Internal contract definition — provides the cross-plugin data model and record type specifications
+  for claim lifecycle management in the cogni-claims verification system.
 ---
 
 # ClaimEntity Contract
@@ -58,7 +61,7 @@ Claim state persists in the calling project's `.claims/` directory:
 
 ## Cross-Plugin Integration
 
-To submit or query claims from another plugin, invoke `cogni-claims:claims` skill. See `references/schema.md` for batch submission format and query interfaces.
+This skill defines the data structures; the `cogni-claims:claims` skill handles submission, verification, and query execution. To submit or query claims from another plugin, invoke `cogni-claims:claims` skill. See `references/schema.md` for batch submission format and query interfaces.
 
 ## Hard Rules
 
@@ -72,3 +75,4 @@ To submit or query claims from another plugin, invoke `cogni-claims:claims` skil
 
 - **`references/schema.md`** — Full JSON schema, field tables, deviation type definitions, severity criteria, batch submission format, query interfaces
 - **`references/workspace-conventions.md`** — Directory structure, file formats, initialization, caching rules
+- **`examples/claim-lifecycle.json`** — End-to-end example showing a claim progressing through unverified, deviated, and resolved states with all three record types populated

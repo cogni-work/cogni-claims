@@ -2,8 +2,9 @@
 name: claims
 description: |
   This skill should be used when the user asks to "verify claims", "check claims against sources",
-  "claims dashboard", "resolve claim", "submit claim", "claim verification", "fact-check claims",
-  "re-verify claims", or when any plugin needs to submit claims for source verification.
+  "claims dashboard", "show claims", "resolve claim", "submit claim", "claim verification",
+  "fact-check claims", "re-verify claims", "review deviations", "inspect claim",
+  "what claims are pending", or when any plugin needs to submit claims for source verification.
   Orchestrates the full claim verification lifecycle: ingestion, source-based verification,
   deviation detection, dashboard presentation, and user-guided resolution.
 version: 1.0.0
@@ -22,7 +23,7 @@ Manage the full lifecycle of sourced claims: accept claims (individually or in b
 
 ## Operating Modes
 
-This skill supports five modes, determined by the `mode` parameter or inferred from user intent:
+Support five operating modes, determined by the `mode` parameter or inferred from user intent:
 
 | Mode | Trigger | Description |
 |------|---------|-------------|
@@ -89,7 +90,7 @@ Task parameters:
   prompt: Include working_dir, source URL, claim IDs, claim statements
 ```
 
-Launch agents in parallel when multiple URLs exist. Each agent:
+**Launch agents in parallel** when multiple URLs exist. Each agent:
 1. Fetches the source URL (WebFetch, browser fallback)
 2. Caches source content in `.claims/sources/{hash}.json`
 3. Compares each claim against source content
@@ -177,6 +178,10 @@ Guide the user through resolving a deviated claim.
 ### Scripts
 
 - **`scripts/claims-store.sh`** — JSON state management utility for reading/writing claims registry, generating IDs and URL hashes. Invoke via: `bash "${CLAUDE_PLUGIN_ROOT}/skills/claims/scripts/claims-store.sh" <command> [args...]`
+
+### Examples
+
+- **`examples/claims-sample.json`** — Sample `claims.json` with claims in all statuses (unverified, verified, deviated, resolved) showing complete field structures
 
 ### Cross-Plugin Contract
 
