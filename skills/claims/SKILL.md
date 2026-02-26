@@ -7,7 +7,6 @@ description: |
   "what claims are pending", or when any plugin needs to submit claims for source verification.
   Orchestrates the full claim verification lifecycle: ingestion, source-based verification,
   deviation detection, dashboard presentation, and user-guided resolution.
-version: 1.0.0
 ---
 
 # Claims Verification Orchestrator
