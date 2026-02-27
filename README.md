@@ -1,123 +1,63 @@
-# cogni-claims
+# Claim Verification Plugin
 
-A Claude Cowork plugin for claim verification and management.
+A claim verification and source validation plugin primarily designed for [Cowork](https://claude.com/product/cowork), Anthropic's agentic desktop application — though it also works in Claude Code. Supports claim ingestion, source verification, deviation detection, claims dashboard review, source inspection, and user-guided resolution.
 
-## Problem
-
-Plugins that rely on web search produce sourced claims that may deviate from what sources actually say. Users need a systematic way to verify, track, and resolve these discrepancies.
+> **Important**: This plugin assists with verifying sourced claims against cited URLs but does not guarantee factual accuracy. Deviation detection is LLM-based and should not be treated as infallible. All verification results should be reviewed by the user before acting on them.
 
 ## Installation
 
 ```bash
-claude --plugin-dir /path/to/cogni-claims
+claude plugins add insight-wave-marketplace/cogni-claims
 ```
 
-## Usage
+## Commands
 
-```bash
-/claims submit "The AI market will reach $1.8T by 2030" --source "https://example.com/report" --title "AI Forecast"
-/claims verify
-/claims dashboard
-/claims inspect claim-abc123
-/claims resolve claim-abc123
-```
+| Command | Description |
+|---------|-------------|
+| `/claims submit` | Claim ingestion — submit individual claims or batch-import from context, each with a source URL and title for tracking |
+| `/claims verify` | Source verification — fetch cited URLs and detect deviations (misquotation, unsupported conclusion, selective omission, data staleness, source contradiction) |
+| `/claims dashboard` | Claims dashboard — review all claims grouped by status with severity indicators and resolution options |
+| `/claims inspect` | Source inspection — open a source page with the relevant passage highlighted for in-context review |
+| `/claims resolve` | Claim resolution — correct, flag, find alternative sources, discard, or accept claims with user-guided decisions |
 
-## Components
+## Skills
 
-| Type | Name | Purpose |
-|------|------|---------|
-| Skill | `claim-entity` | Cross-plugin contract (ClaimEntity schema, workspace conventions) |
-| Skill | `claims` | Main orchestrator (ingestion, verification, dashboard, resolution) |
-| Agent | `claim-verifier` | Worker: fetches one source URL, verifies all claims against it |
-| Agent | `source-inspector` | Browser: opens source page, highlights relevant passage |
-| Command | `/claims` | User entry point with 5 modes: submit, verify, dashboard, inspect, resolve |
-| Script | `claims-store.sh` | JSON state management (init, gen-id, url-hash, read/count claims) |
+| Skill | Description |
+|-------|-------------|
+| `claims` | Main orchestrator for claim lifecycle: ingestion, parallel verification against cited sources, dashboard presentation, and resolution workflows |
+| `claim-entity` | Cross-plugin contract defining the ClaimEntity schema (claim records, deviation records, resolution records) and workspace conventions |
 
-## Capabilities
+## Example Workflows
 
-### Claim Ingestion
+### Verify Claims from a Research Report
 
-Accept claims (statement + source URL + source title) individually or in batch, from its own web search or from other plugins. Each claim receives a unique ID and is tracked as unverified.
+1. Run `/claims submit --batch` with a markdown file containing sourced claims
+2. Run `/claims verify` to check all unverified claims against their cited sources
+3. Run `/claims dashboard` to review findings grouped by status and severity
+4. Run `/claims inspect claim-abc123` to see a flagged source passage in context
+5. Run `/claims resolve claim-abc123` to correct or accept the claim
 
-### Source Verification
+### Single Claim Verification
 
-For each unverified claim, read the source URL content and determine whether the source supports, contradicts, or is silent on the claim. Detect specific deviation types:
+1. Run `/claims submit "The AI market will reach $1.8T by 2030" --source "https://example.com/report" --title "AI Forecast"`
+2. Run `/claims verify` to fetch the source and check for deviations
+3. Run `/claims dashboard` to review the result
 
-- **Misquotation** — claim misrepresents what the source says
-- **Unsupported conclusion** — claim draws a conclusion the source does not support
-- **Selective omission** — claim omits context that changes meaning
-- **Data staleness** — claim uses outdated data from the source
-- **Source contradiction** — source directly contradicts the claim
+### Cross-Plugin Claim Handoff
 
-Each deviation is recorded with its type, severity (low / medium / high / critical), the verbatim source excerpt, and a plain-language explanation. If no deviation is found, the claim is marked as verified with the supporting excerpt.
+1. Another plugin (e.g., `cogni-research`) submits claims via the `cogni-claims:claims` skill with mode `submit`
+2. Run `/claims verify` to verify the submitted claims
+3. Run `/claims dashboard` to review results and resolve any deviations
 
-### Retrieval Failure Handling
+## Agents
 
-If a source is unreachable or in an unsupported format, the failure reason is recorded and the claim is marked as `source_unavailable`. An unverifiable claim is never silently marked as verified.
+| Agent | Description |
+|-------|-------------|
+| `claim-verifier` | Verification worker — fetches one source URL and verifies all claims referencing it, returning deviation analysis as compact JSON |
+| `source-inspector` | Browser inspector — opens a source URL and highlights the relevant passage for user review before resolution decisions |
 
-### Claims Dashboard
+## Configuration
 
-Findings are presented grouped by status. For medium+ severity deviations, resolution options are offered:
+Claim state is stored within the calling project's workspace under `.claims/`. No additional MCP servers or external configuration are required — the plugin uses web fetching to retrieve cited sources directly.
 
-- Correct the claim
-- Flag as disputed
-- Search for alternative source
-- Discard
-- Accept as-is with override
-
-The user is the authority — the system provides evidence, the user decides.
-
-### Source Inspection
-
-Users can navigate to the source page with the relevant passage highlighted to judge deviations in context before deciding. Uses WebFetch by default, falls back to browser automation for JS-rendered or paywalled pages.
-
-### Claim Lifecycle Tracking
-
-The full history is persisted: submission, verification, deviations, resolution. Re-verification on demand is supported. State survives across the session.
-
-### Cross-Plugin Contract
-
-A `ClaimEntity` schema (claim record + deviation record + resolution record) is published for consuming plugins. Interfaces are provided for:
-
-- Submitting claims
-- Querying verification results by claim ID
-- Querying all claims by submitting plugin
-
-Fetched sources are cached to avoid redundant retrieval.
-
-## Data Storage
-
-Claim state is stored within the calling project's workspace:
-
-```
-{project}/.claims/
-├── claims.json          # Registry of all claims
-├── sources/{hash}.json  # Cached source content per URL
-└── history/{id}.json    # Audit trail per claim
-```
-
-## Cross-Plugin Integration
-
-Other plugins submit claims by invoking `cogni-claims:claims` with mode `submit`:
-
-```
-Parameters:
-  mode: "submit"
-  working_dir: "/path/to/project"
-  submitted_by: "cogni-research"
-  claims: [{statement, source_url, source_title}, ...]
-```
-
-See the `claim-entity` skill and `references/schema.md` for the full ClaimEntity contract.
-
-## Quality Constraints
-
-- Prefer cautious "uncertain" findings over false-positive deviations
-- Always show the source excerpt as evidence
-- Communicate ambiguity explicitly
-- Batch verification of N claims sharing K URLs requires at most K source fetches
-
-## Hard Rules
-
-- All resolutions require user confirmation — never auto-correct or auto-retract
-- Deviation detection is LLM-based and must not be presented as infallible
+> **Note:** For JavaScript-rendered or paywalled pages, the plugin falls back to browser automation via the `source-inspector` agent.
