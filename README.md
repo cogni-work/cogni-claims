@@ -17,7 +17,7 @@ Every claim above has been verified against its source using this plugin. This p
 
 ## What it is
 
-A systematic claim-verification workflow for Claude Code. Other plugins (like `cogni-research` or `cogni-portfolio`) generate sourced content — this one checks whether the sources actually say what's claimed. It's designed for cross-plugin use: submit claims from anywhere, verify and resolve them here.
+A systematic claim-verification workflow for Claude Code. Other plugins generate sourced content — this one checks whether the sources actually say what's claimed. It's designed for cross-plugin use: submit claims from anywhere, verify and resolve them here.
 
 ## What it does
 
