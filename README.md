@@ -58,48 +58,21 @@ Or just describe what you want in natural language — the plugin figures out th
 - "show me what the source actually says for that quantum computing claim"
 - "let's fix the deviated claims one by one"
 
-## Example
+## Try it
 
-You ask Claude to research a topic. It produces sourced findings:
+After installing, type one prompt:
 
-> **You:** Research the current state of LLM citation accuracy.
+> Research LLM citation hallucination errors and verify the claims
 
-Claude writes a paragraph with inline citations:
+Claude researches the topic, produces sourced findings, then automatically verifies each claim against its cited source. You'll see which claims check out and which don't — then you can resolve any deviations.
 
-> Studies show that 14–95% of LLM citations are hallucinated depending on domain
-> ([GhostCite, 2025](https://arxiv.org/html/2602.06718)), and AI search engines
-> fail to produce accurate citations in over 60% of tests
-> ([CJR Tow Center, 2025](https://www.cjr.org/tow_center/we-compared-eight-ai-search-engines-theyre-all-bad-at-citing-news.php)).
-
-Now you verify:
-
-> **You:** Verify those claims.
-
-```
-Verifying 2 claims against 2 sources...
-
-  claim-a1b2  VERIFIED
-  claim-c3d4  DEVIATED (medium)
-    Claim says "over 60%", source says "more than half"
-    — the figure appears overstated relative to the source's wording.
-```
-
-> **You:** Resolve claim-c3d4.
-
-```
-  Suggested correction: "fail to produce accurate citations
-  in more than half of tests"
-
-  [Correct] [Dispute] [Alternative source] [Discard] [Accept as-is]
-```
-
-Results live in your project's `claims/` directory — browse them anytime:
+Results land in your project's `claims/` directory:
 
 ```
 claims/
 ├── claims.json              # all claims with status + evidence
-├── sources/a1b2c3d4.json    # cached source content
-└── history/claim-c3d4.json  # audit trail for this claim
+├── sources/                 # cached source content per URL
+└── history/                 # audit trail per claim
 ```
 
 ## How it works
