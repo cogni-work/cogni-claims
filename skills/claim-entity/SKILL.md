@@ -29,6 +29,8 @@ A specific discrepancy between claim and source. Key fields: `type`, `severity`,
 
 **Severity levels:** `low`, `medium`, `high`, `critical`
 
+**Language in `explanation` fields:** Because deviation detection is LLM-based and can be wrong, explanations must use hedged language — "the claim appears to overstate", "the source suggests a different figure", "this may indicate a discrepancy" — rather than definitive assertions like "the claim is wrong" or "significantly overstating". This epistemic humility signals to the user that the finding is an assessment to review, not a verdict.
+
 ### ResolutionRecord
 
 The user's decision on a deviated claim. Key fields: `action`, `corrected_statement`, `rationale`.

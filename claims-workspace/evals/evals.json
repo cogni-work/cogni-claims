@@ -1,45 +1,84 @@
 {
-  "skill_name": "claims",
+  "skill_name": "claims+claim-entity",
   "evals": [
     {
       "id": 1,
       "prompt": "I've got three claims from my research that I need to verify against their sources. Can you submit them and then check them?\n\n1. \"OpenAI's GPT-4 was released in March 2023\" - source: https://en.wikipedia.org/wiki/GPT-4 title: \"GPT-4 Wikipedia\"\n2. \"Anthropic was founded in 2021 by former OpenAI members\" - source: https://en.wikipedia.org/wiki/Anthropic title: \"Anthropic Wikipedia\"\n3. \"The transformer architecture was introduced in the paper Attention Is All You Need published in 2017\" - source: https://en.wikipedia.org/wiki/Transformer_(deep_learning_model) title: \"Transformer Wikipedia\"",
-      "expected_output": "The skill should submit all 3 claims, then verify them by dispatching claim-verifier agents (grouped by unique source URLs), and present a verification summary showing which claims verified clean and which had deviations.",
+      "expected_output": "Submit all 3 claims, verify against Wikipedia sources, present verification summary with co-browsing offer for any deviations.",
       "files": [],
       "assertions": [
-        {"name": "claims-created", "description": "All 3 claims appear in claims.json with unique IDs and correct statements"},
-        {"name": "workspace-initialized", "description": "claims/ directory structure created with claims.json, sources/, and history/ subdirectories"},
-        {"name": "verification-attempted", "description": "Verification was dispatched — evidence of WebFetch calls or agent dispatches for the Wikipedia URLs"},
-        {"name": "summary-presented", "description": "A verification summary was shown indicating how many claims verified, deviated, or had unavailable sources"}
+        {"name": "workspace-initialized", "description": "cogni-claims/ directory created with claims.json, sources/, and history/ subdirectories"},
+        {"name": "claims-created", "description": "All 3 claims appear in claims.json with unique claim-<uuid> IDs and correct statements"},
+        {"name": "source-grouping", "description": "Claims grouped by URL for verification (3 unique URLs = 3 fetches, no duplicates)"},
+        {"name": "verification-attempted", "description": "Evidence of WebFetch calls to all 3 Wikipedia URLs"},
+        {"name": "summary-presented", "description": "Verification summary showing counts of verified, deviated, or source_unavailable claims"},
+        {"name": "co-browse-offered", "description": "If deviations found, proactively offers to open the source in the browser for co-browsing"}
       ]
     },
     {
       "id": 2,
       "prompt": "what's the status of my claims? I submitted some earlier and want to see what needs attention",
-      "expected_output": "The skill should recognize this as a dashboard request, read the claims.json, and render a properly formatted dashboard showing claims grouped by status with action hints for deviated claims.",
-      "files": [],
+      "expected_output": "Recognize dashboard mode, render formatted dashboard with status sections and action hints.",
+      "files": [{"path": "cogni-claims/claims.json", "description": "Pre-populated claims registry with sample data"}],
       "assertions": [
-        {"name": "mode-inferred", "description": "Correctly interpreted 'what's the status' as dashboard mode without confusion or asking for clarification"},
-        {"name": "grouped-by-status", "description": "Claims displayed grouped by status categories (deviated, verified, unverified, etc.)"},
-        {"name": "action-hints", "description": "Deviated claims include actionable next-step hints like 'use /claims inspect' or 'use /claims resolve'"},
-        {"name": "formatting-quality", "description": "Dashboard uses markdown tables with claim IDs, truncated statements, and status information"}
+        {"name": "mode-inferred", "description": "Correctly interpreted 'what's the status' as dashboard mode without asking for clarification"},
+        {"name": "grouped-by-status", "description": "Claims displayed grouped by status categories (deviated, verified, unverified, resolved)"},
+        {"name": "severity-sorting", "description": "Deviated claims sorted by severity descending (critical first)"},
+        {"name": "action-hints", "description": "Includes actionable next-step hints like /claims inspect and /claims resolve"},
+        {"name": "deviation-context", "description": "Deviated claims include inline one-line summary of what the deviation is, not just the type label"},
+        {"name": "formatting-quality", "description": "Dashboard uses markdown tables with claim IDs, truncated statements, and linked sources"}
       ]
     },
     {
       "id": 3,
       "prompt": "I have a claims.json with some deviated claims. Can you show me the details on the quantum computing claim and help me resolve it? The claim ID is claim-c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
-      "expected_output": "The skill should first inspect the claim (showing deviation details, type, severity, source excerpt), then transition to resolve mode presenting the user with resolution options via AskUserQuestion.",
-      "files": [
-        {
-          "path": "claims/claims.json",
-          "description": "Pre-populated claims registry with the sample data from the plugin's examples"
-        }
-      ],
+      "expected_output": "Inspect the claim showing deviation details with What This Means section, then present resolution options.",
+      "files": [{"path": "cogni-claims/claims.json", "description": "Pre-populated claims registry with deviated quantum computing claim"}],
       "assertions": [
         {"name": "correct-claim-found", "description": "Located the quantum computing claim by its ID and displayed the correct statement"},
-        {"name": "deviation-details-shown", "description": "Shows the deviation type (data_staleness), severity (medium), source excerpt, and explanation"},
+        {"name": "deviation-details-shown", "description": "Shows deviation type (data_staleness), severity (medium), source excerpt, and explanation"},
+        {"name": "what-this-means", "description": "Includes a labeled plain-language 'What this means' contextual explanation section"},
         {"name": "evidence-included", "description": "The verbatim source excerpt is shown before asking the user to make a resolution decision"},
-        {"name": "resolution-options-presented", "description": "All 5 resolution options (correct, dispute, alternative source, discard, accept as-is) are documented"}
+        {"name": "all-five-options", "description": "All 5 resolution options presented: correct, dispute, alternative source, discard, accept as-is"},
+        {"name": "suggested-correction", "description": "For the Correct option, a suggested corrected claim statement is provided based on what the source says"}
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I'm building a cogni-research plugin that produces sourced assertions. I need to submit these claims to the cogni-claims system for verification. What data format should I use? Show me the exact JSON structure.",
+      "expected_output": "Show ClaimRecord schema, batch submission format, required vs auto fields, and submission workflow.",
+      "files": [],
+      "assertions": [
+        {"name": "claim-record-schema", "description": "Shows complete ClaimRecord JSON structure with all required fields (id, statement, source_url, source_title, submitted_by, status)"},
+        {"name": "batch-format-shown", "description": "Includes the batch submission format with claims[] array and submitted_by field"},
+        {"name": "field-requirements", "description": "Distinguishes between required fields (statement, source_url, source_title) and auto-generated fields (id, submitted_at, status)"},
+        {"name": "submission-workflow", "description": "Explains how to invoke the cogni-claims:claims skill with mode submit for batch submission"},
+        {"name": "id-format-correct", "description": "Specifies that claim IDs use the format claim-<uuid-v4>"}
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I created this claim record for my plugin — can you check if it follows the cogni-claims contract?\n```json\n{\"id\": \"abc-123\", \"text\": \"AI market growing fast\", \"url\": \"example.com\", \"by\": \"my-plugin\", \"status\": \"pending\"}\n```",
+      "expected_output": "Identify all schema violations: wrong ID format, wrong field names, wrong status value, missing source_title. Provide corrected example.",
+      "files": [],
+      "assertions": [
+        {"name": "wrong-id-format", "description": "Flags abc-123 as wrong ID format (should be claim-<uuid-v4>)"},
+        {"name": "wrong-field-names", "description": "Flags incorrect field names: text should be statement, url should be source_url, by should be submitted_by"},
+        {"name": "wrong-status-value", "description": "Flags pending as an invalid status value (valid values: unverified, verified, deviated, source_unavailable, resolved)"},
+        {"name": "missing-fields", "description": "Identifies missing required field source_title"},
+        {"name": "corrected-example", "description": "Provides a corrected ClaimRecord JSON example matching the actual schema"}
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "My source says 'revenue grew between 30-35% YoY' but the claim in my report says 'revenue grew 45% YoY'. What deviation type and severity should I assign? What should the DeviationRecord look like?",
+      "expected_output": "Identify misquotation type, high severity, provide complete valid DeviationRecord with hedged language.",
+      "files": [],
+      "assertions": [
+        {"name": "correct-type", "description": "Identifies misquotation as the deviation type (claim misrepresents the source's stated figure)"},
+        {"name": "correct-severity", "description": "Assigns high severity (significant misrepresentation — reader would form wrong conclusion about growth rate)"},
+        {"name": "valid-record", "description": "Provides a DeviationRecord JSON with all required fields: id, claim_id, type, severity, source_excerpt, explanation, detected_at"},
+        {"name": "hedged-language", "description": "Explanation uses epistemic humility language (appears to, suggests, may indicate) rather than definitive judgments"}
       ]
     }
   ]
