@@ -7,7 +7,8 @@ description: |
   tracking the accuracy of sourced statements. Also use it when another plugin submits claims
   for verification (e.g., after a research or portfolio workflow produces sourced assertions).
   Even if the user doesn't say "claims" explicitly — if they're asking about verifying facts
-  against sources, checking citations, or reviewing what's been flagged, this skill handles it.
+  against sources, checking citations, finding outdated or mismatched data in cited references,
+  or reviewing what's been flagged, this skill handles it.
 ---
 
 # Claims Verification Orchestrator
