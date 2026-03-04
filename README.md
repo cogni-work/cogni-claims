@@ -62,7 +62,7 @@ Or just describe what you want in natural language — the plugin figures out th
 
 After installing, type one prompt:
 
-> Research LLM citation hallucination errors and verify the claims
+> Search the web for LLM citation hallucination errors and verify the claims
 
 Claude researches the topic, produces sourced findings, then automatically verifies each claim against its cited source. You'll see which claims check out and which don't — then you can resolve any deviations.
 
