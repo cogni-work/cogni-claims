@@ -58,6 +58,34 @@ Or just describe what you want in natural language — the plugin figures out th
 - "show me what the source actually says for that quantum computing claim"
 - "let's fix the deviated claims one by one"
 
+## Example
+
+You're writing a report and cite a stat: *"The global AI market will reach $1.8 trillion by 2030."*
+
+```
+> /claims submit "The global AI market will reach $1.8T by 2030"
+  --source "https://example.com/ai-forecast" --title "AI Market Report"
+
+Submitted claim-a1b2c3d4.
+
+> /claims verify
+
+Verifying 1 claim against 1 source...
+
+  claim-a1b2c3d4  DEVIATED (high)
+  Claim says $1.8T, but source projects $800B–$1.5T.
+  The claim exceeds the upper bound of the source's projection.
+
+> /claims resolve claim-a1b2c3d4
+
+  Suggested correction: "The global AI market is projected
+  between $800B and $1.5T by 2030."
+
+  [Correct] [Dispute] [Alternative source] [Discard] [Accept as-is]
+```
+
+The claim was wrong. Now you know — before your reader does.
+
 ## How it works
 
 Claims are stored in your project's `.claims/` directory as JSON. When you verify, the plugin dispatches a **claim-verifier** agent per unique source URL — each agent fetches the page once and checks all claims referencing it. For deviated claims, the **source-inspector** agent can open the source in Chrome and highlight the relevant passage so you can see the discrepancy in context.
