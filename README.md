@@ -91,4 +91,4 @@ Claims are stored in your project's `cogni-claims/` directory as JSON. When you 
 
 ## License
 
-[MIT](LICENSE)
+[AGPL-3.0](LICENSE)
