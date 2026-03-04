@@ -1,111 +1,104 @@
 ---
 name: claims
 description: |
-  This skill should be used when the user asks to "verify claims", "check claims against sources",
-  "claims dashboard", "show claims", "resolve claim", "submit claim", "claim verification",
-  "fact-check claims", "re-verify claims", "review deviations", "inspect claim",
-  "what claims are pending", or when any plugin needs to submit claims for source verification.
-  Orchestrates the full claim verification lifecycle: ingestion, source-based verification,
-  deviation detection, dashboard presentation, and user-guided resolution.
+  Manage claim verification lifecycle — submit, verify, review dashboard, inspect, and resolve claims.
+  Use this skill whenever the user mentions claims, fact-checking, source verification, checking
+  whether statements match their cited sources, reviewing deviations, or anything related to
+  tracking the accuracy of sourced statements. Also use it when another plugin submits claims
+  for verification (e.g., after a research or portfolio workflow produces sourced assertions).
+  Even if the user doesn't say "claims" explicitly — if they're asking about verifying facts
+  against sources, checking citations, or reviewing what's been flagged, this skill handles it.
 ---
 
 # Claims Verification Orchestrator
 
-## Purpose
+You manage the full lifecycle of sourced claims: accepting them, verifying them against their cited URLs, detecting deviations, presenting findings, and guiding the user through resolution.
 
-Manage the full lifecycle of sourced claims: accept claims (individually or in batch), verify them against their cited source URLs, detect deviations, present findings to the user, and guide resolution. This skill orchestrates the pipeline; verification work is delegated to the `claim-verifier` agent.
+The key insight behind this system is that LLM-generated content often cites sources but may subtly misrepresent them — a number rounded too aggressively, a conclusion that goes beyond what the source actually says, context that changes the meaning. This skill exists to catch those gaps systematically rather than hoping someone manually checks every citation.
 
-**Not for:**
-- Generating claims from scratch (that is the submitting plugin's responsibility)
-- Making editorial decisions (the user is the authority)
-- Presenting deviation findings as definitive facts (they are LLM-based assessments)
+## What this skill does NOT do
 
-## Operating Modes
+- **Generate claims** — that's the submitting plugin's job (e.g., cogni-research, cogni-portfolio)
+- **Make editorial decisions** — the user always has final say on how to handle deviations
+- **Present findings as verdicts** — deviation detection is LLM-based, so findings are assessments for the user to review, not definitive judgments
 
-Support five operating modes, determined by the `mode` parameter or inferred from user intent:
+## Choosing the right mode
 
-| Mode | Trigger | Description |
-|------|---------|-------------|
-| `submit` | "submit claim", batch from plugin | Ingest new claims into the registry |
-| `verify` | "verify claims", "check claims" | Run verification pipeline on unverified claims |
-| `dashboard` | "claims dashboard", "show claims" | Display status overview |
-| `inspect` | "inspect claim <id>" | Show detailed deviation evidence for one claim |
-| `resolve` | "resolve claim <id>" | Present resolution options for a deviated claim |
+Determine the operating mode from the user's intent. People rarely say "mode: verify" — they'll say things like "check my claims" or "what's the status" or "let me see what's wrong with claim-xyz". Here's how to map intent to mode:
 
-## Workspace Initialization
+| Mode | What triggers it | What it does |
+|------|-----------------|--------------|
+| `submit` | User or plugin provides new claims with sources | Add claims to the registry for tracking |
+| `verify` | "verify", "check", "run verification", or first time after submission | Fetch sources and compare claims against them |
+| `dashboard` | "show", "status", "overview", "what claims", "dashboard" | Display all claims grouped by status |
+| `inspect` | "inspect", "show me", "details on", "what's wrong with" + a claim ID | Deep-dive into one claim's evidence |
+| `resolve` | "resolve", "fix", "handle", "deal with" + a claim ID | Walk the user through resolving a deviation |
 
-Before any operation, ensure the workspace exists:
+When in doubt, `dashboard` is a safe default — it gives the user an overview and they can drill down from there.
 
-1. Determine `working_dir` — passed as parameter, or use the current working directory
-2. Check for `{working_dir}/.claims/claims.json`
-3. If missing, initialize:
-   - Create `.claims/`, `.claims/sources/`, `.claims/history/`
-   - Write initial `claims.json` with empty claims array
-4. Read `claims.json` into working context
+## Workspace setup
 
-## Mode: Submit
+Before any operation, make sure the workspace exists. Run the init script — it's idempotent, so calling it when the workspace already exists is fine:
 
-Accept one or more claims and add to the registry.
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/claims/scripts/claims-store.sh" init "${working_dir}"
+```
 
-**Required input:**
-- `statement` — the claim text
-- `source_url` — URL of cited source
-- `source_title` — human-readable source title
-- `submitted_by` — plugin name or `"user"` for direct submission
+The `working_dir` is either passed as a parameter or defaults to the current working directory. All claim state lives in `{working_dir}/.claims/`.
 
-**Process:**
-1. For each claim, generate a unique ID: `claim-<uuid>`
-2. Create a ClaimRecord with status `unverified`
-3. Append to `claims.json`
-4. Write submission event to `history/{claim-id}.json`
-5. Report count of submitted claims to user
+## Submit mode
 
-**Batch submission:** Accept an array of `{statement, source_url, source_title}` objects. Process all in a single registry update.
+Accept one or more claims and register them for future verification.
 
-## Mode: Verify
+Each claim needs: `statement` (the claim text), `source_url`, `source_title`, and `submitted_by` (the plugin name, or `"user"` for direct submissions).
 
-Run the verification pipeline on unverified claims (or a specific claim by ID).
+**Steps:**
+1. Generate a unique ID for each claim using the store script: `bash claims-store.sh gen-id`
+2. Create a ClaimRecord with status `unverified` (see the `cogni-claims:claim-entity` skill for the data model)
+3. Append to `claims.json` and update the `updated_at` timestamp
+4. Write a submission event to `history/{claim-id}.json`
+5. Tell the user how many claims were submitted
 
-**Process:**
+For batch submissions, process all claims in a single registry update to keep things efficient.
 
-### Step 1: Select Claims
+## Verify mode
 
-- If `--id <id>` specified, verify that single claim (even if previously verified — this is re-verification)
-- Otherwise, select all claims with status `unverified`
-- If no claims to verify, inform user and exit
+This is where the real work happens — fetching sources and comparing claims against them.
 
-### Step 2: Group by Source URL
+### Step 1: Select which claims to verify
 
-Group selected claims by `source_url`. Count unique URLs (K) and total claims (N).
-Report: "Verifying {N} claims against {K} unique sources."
+- If the user specified `--id <id>`, verify just that claim (even if already verified — this is re-verification)
+- Otherwise, grab all claims with status `unverified`
+- If there's nothing to verify, let the user know and stop
 
-### Step 3: Dispatch Verification
+### Step 2: Group by source URL
 
-For each unique URL group, launch a `cogni-claims:claim-verifier` agent via the Task tool:
+Multiple claims often cite the same source. Group them by `source_url` so each URL is fetched exactly once. Tell the user: "Verifying {N} claims against {K} unique sources."
+
+### Step 3: Dispatch verification agents
+
+For each unique URL group, launch a `cogni-claims:claim-verifier` agent:
 
 ```
-Task parameters:
+Agent parameters:
   subagent_type: "cogni-claims:claim-verifier"
-  prompt: Include working_dir, source URL, claim IDs, claim statements
+  prompt: Include working_dir, source URL, claim IDs, and claim statements
 ```
 
-**Launch agents in parallel** when multiple URLs exist. Each agent:
-1. Fetches the source URL (WebFetch, browser fallback)
-2. Caches source content in `.claims/sources/{hash}.json`
-3. Compares each claim against source content
-4. Returns verification results as JSON
+Launch all agents in parallel when there are multiple URLs — this is the main performance optimization. Each agent fetches the source once and verifies all claims referencing it.
 
-### Step 4: Collect Results
+### Step 4: Collect and record results
 
-Read verification results from each agent. For each claim:
-- Update status in `claims.json` (`verified`, `deviated`, or `source_unavailable`)
-- Attach DeviationRecords if deviations detected
-- Record source excerpt
-- Write verification event to `history/{claim-id}.json`
+As agents complete, update `claims.json` for each claim:
+- No deviations found → status becomes `verified`
+- Deviations detected → status becomes `deviated`, attach the DeviationRecords
+- Source unreachable → status becomes `source_unavailable`
 
-### Step 5: Present Summary
+Also record the source excerpt and write verification events to each claim's history file.
 
-Show a brief verification summary:
+### Step 5: Summarize and offer co-browsing
+
+Show a brief summary:
 ```
 Verification complete:
 - {n} verified (no deviations)
@@ -113,80 +106,83 @@ Verification complete:
 - {n} sources unavailable
 ```
 
-If deviations with severity `medium` or higher exist, suggest: "Run `/claims dashboard` to review findings."
+If there are deviated claims with severity `medium` or higher, don't just point the user to the dashboard — proactively offer to open the deviated sources in the browser so they can see the discrepancies in context. This co-browsing step is valuable because LLM-based deviation findings are assessments, and the user will often want to verify them against the actual source page before deciding what to do.
 
-## Mode: Dashboard
+For each deviated claim, briefly show:
+- The claim statement and deviation type
+- The source excerpt that conflicts
+- An offer to open the source in the browser via the `cogni-claims:source-inspector` agent
 
-Display the claims dashboard grouped by status. Consult `references/dashboard-format.md` for the complete layout specification.
+If the user wants to see the source, launch the source-inspector agent immediately — don't make them go through inspect mode first. The goal is a seamless flow: verify → see the problem → decide what to do.
 
-**Process:**
-1. Read `claims.json`
-2. Group claims by status
-3. Sort within groups (see dashboard-format.md for sort rules)
-4. Render markdown tables per section
-5. Include action hints for deviated claims
+## Dashboard mode
 
-## Mode: Inspect
+Show the user where things stand. Read `claims.json`, group by status, and render the dashboard. The complete layout spec is in `references/dashboard-format.md` — follow it for section ordering, truncation rules, and sorting.
 
-Show detailed evidence for a specific claim.
+The dashboard should give the user a clear picture at a glance and make it obvious what needs attention (deviated claims with high severity) vs. what's fine (verified claims).
 
-**Process:**
-1. Look up claim by ID in `claims.json`
-2. If claim has deviations, display each with:
-   - Deviation type and severity
-   - Source excerpt (verbatim)
-   - Explanation
-3. If claim is verified, display supporting excerpt
-4. Offer to open source in browser for in-context inspection:
-   - Launch `cogni-claims:source-inspector` agent with the source URL and relevant excerpt
-   - The agent navigates to the page and highlights the passage
+For each deviated claim in the "Deviations Requiring Attention" section, include a one-line summary of what the deviation is (not just the type label) so the user can quickly decide which claims to inspect. When presenting action hints, emphasize that `/claims inspect <id>` will open the source in the browser for side-by-side review — this is the primary workflow for handling deviations.
 
-## Mode: Resolve
+## Inspect mode
 
-Guide the user through resolving a deviated claim.
+When the user wants to dig into a specific claim's evidence. This mode should feel like a natural co-browsing session — show the evidence and immediately help the user see the source.
 
-**Process:**
-1. Look up claim by ID — must have status `deviated`
-2. Display the claim, deviation details, and source excerpt
-3. Present resolution options using AskUserQuestion:
-   - **Correct** — prompt for corrected statement text
-   - **Dispute** — prompt for rationale
-   - **Alternative source** — prompt for new URL and title
-   - **Discard** — prompt for rationale
-   - **Accept as-is** — prompt for rationale
-4. Record ResolutionRecord with user's choice
-5. Update claim status to `resolved`
-6. Write resolution event to `history/{claim-id}.json`
-7. If action is `alternative_source`, optionally trigger re-verification against new source
+1. Look up the claim by ID
+2. If it has deviations, show each one: type, severity, the verbatim source excerpt, and the explanation. Include a plain-language "What this means" summary that explains the discrepancy in context — why it matters and what a reader would get wrong.
+3. If it's verified, show the supporting excerpt
+4. **Automatically launch the `cogni-claims:source-inspector` agent** to open the source in the browser and highlight the relevant passage. Don't just offer — do it, because the whole point of inspect mode is to let the user see the evidence in its original context. If the user came here, they want to see the source.
+5. Once the source is visible in the browser, offer to transition directly to resolve mode so the user can act on what they see.
 
-## Quality Constraints
+The seamless flow should be: inspect → source opens in browser → user reads the passage → resolve options appear. No extra steps.
 
-- **Conservative detection**: Prefer "uncertain" findings over false positives
-- **Evidence-first**: Always show the source excerpt — never present a deviation without evidence
-- **Explicit ambiguity**: When the comparison is genuinely unclear, say so
-- **User authority**: The system provides assessments; the user makes decisions
-- **No silent failures**: Every unverifiable source is explicitly reported
+## Resolve mode
 
-## Additional Resources
+Walk the user through resolving a deviated claim. If the source isn't already open in the browser from inspect mode, launch `cogni-claims:source-inspector` to open it now — the user should be able to see the source while making their decision.
 
-### Reference Files
+1. Look up the claim — it must have status `deviated`
+2. Display the claim, its deviations, and the source excerpt
+3. For the **Correct** option, generate a suggested correction based on what the source actually says. This saves the user from having to write it from scratch.
+4. Present resolution options using AskUserQuestion:
+   - **Correct** — update the claim to match the source (show the suggested correction, let user edit)
+   - **Dispute** — the deviation finding is wrong (prompt for rationale)
+   - **Alternative source** — the claim is right but needs a different source (prompt for URL)
+   - **Discard** — remove the claim entirely (prompt for rationale)
+   - **Accept as-is** — acknowledge the deviation but keep the claim (prompt for rationale)
+5. Record the ResolutionRecord, update status to `resolved`, write to history
+6. If the user chose "alternative source", offer to re-verify against the new URL
 
-- **`references/verification-protocol.md`** — Detailed verification methodology, deviation type definitions, severity criteria, epistemic humility guidelines
-- **`references/dashboard-format.md`** — Complete dashboard layout, resolution prompt format, truncation and sorting rules
+## Guiding principles
 
-### Scripts
+These aren't arbitrary rules — they reflect the fundamental nature of LLM-based verification:
 
-- **`scripts/claims-store.sh`** — JSON state management utility for reading/writing claims registry, generating IDs and URL hashes. Invoke via: `bash "${CLAUDE_PLUGIN_ROOT}/skills/claims/scripts/claims-store.sh" <command> [args...]`
+- **Conservative detection**: Since an LLM is reading source text and making judgments, false positives are more damaging than false negatives. A false positive wastes the user's time investigating a non-issue and erodes trust. When the comparison is ambiguous, lean toward not flagging.
 
-### Examples
+- **Evidence-first**: Showing the source excerpt alongside every finding lets the user quickly judge whether the deviation is real. Without the excerpt, the user has to go find the source themselves, which defeats the purpose.
 
-- **`examples/claims-sample.json`** — Sample `claims.json` with claims in all statuses (unverified, verified, deviated, resolved) showing complete field structures
+- **Honest about uncertainty**: The system is making probabilistic assessments, not delivering court verdicts. Language like "appears to diverge" rather than "is wrong" correctly communicates the confidence level and respects the user's judgment.
 
-### Cross-Plugin Contract
+- **User authority**: The system's job is to surface potential issues efficiently. The user decides what to do about them. Auto-resolving would be both presumptuous and risky.
 
-For the ClaimEntity data model, see the `cogni-claims:claim-entity` skill and its reference files.
+- **No silent failures**: If a source can't be fetched, that's important information — it means the claim can't be verified, which is different from being verified clean.
 
-### Agents (via Task tool)
+## Reference files
 
-- **`cogni-claims:claim-verifier`** — Worker agent: fetches one source URL, verifies all claims against it, returns results as JSON. Launch in parallel for multiple URLs.
-- **`cogni-claims:source-inspector`** — Browser agent: navigates to source URL, highlights relevant passage for user inspection.
+- **`references/verification-protocol.md`** — The detailed methodology for how claim-source comparison works, including deviation type definitions, severity criteria, and epistemic humility guidelines. Read this when you need specifics on how to instruct the verifier agents.
+- **`references/dashboard-format.md`** — Complete dashboard layout spec with section ordering, truncation rules, and sorting. Read this when rendering the dashboard.
+
+## Scripts
+
+- **`scripts/claims-store.sh`** — Handles workspace init, ID generation, URL hashing, and claim counting. Invoke via: `bash "${CLAUDE_PLUGIN_ROOT}/skills/claims/scripts/claims-store.sh" <command> [args...]`
+
+## Examples
+
+- **`examples/claims-sample.json`** — A sample `claims.json` showing claims in all statuses with complete field structures. Useful for understanding the data shape.
+
+## Cross-plugin contract
+
+The ClaimEntity data model (record types, field definitions, status transitions) lives in the `cogni-claims:claim-entity` skill. Consult it when you need to create or validate record structures.
+
+## Agents
+
+- **`cogni-claims:claim-verifier`** — Fetches one source URL, verifies all claims against it, returns structured JSON. Launch in parallel for multiple URLs.
+- **`cogni-claims:source-inspector`** — Opens a source URL in the browser and highlights the relevant passage for the user to inspect.
