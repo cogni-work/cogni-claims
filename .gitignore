@@ -1,5 +1,5 @@
 # Runtime state (created per-project, not part of plugin)
-.claims/
+/claims/
 
 # Validation and test artifacts
 .test-results/

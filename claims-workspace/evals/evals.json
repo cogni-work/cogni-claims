@@ -1,0 +1,46 @@
+{
+  "skill_name": "claims",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I've got three claims from my research that I need to verify against their sources. Can you submit them and then check them?\n\n1. \"OpenAI's GPT-4 was released in March 2023\" - source: https://en.wikipedia.org/wiki/GPT-4 title: \"GPT-4 Wikipedia\"\n2. \"Anthropic was founded in 2021 by former OpenAI members\" - source: https://en.wikipedia.org/wiki/Anthropic title: \"Anthropic Wikipedia\"\n3. \"The transformer architecture was introduced in the paper Attention Is All You Need published in 2017\" - source: https://en.wikipedia.org/wiki/Transformer_(deep_learning_model) title: \"Transformer Wikipedia\"",
+      "expected_output": "The skill should submit all 3 claims, then verify them by dispatching claim-verifier agents (grouped by unique source URLs), and present a verification summary showing which claims verified clean and which had deviations.",
+      "files": [],
+      "assertions": [
+        {"name": "claims-created", "description": "All 3 claims appear in claims.json with unique IDs and correct statements"},
+        {"name": "workspace-initialized", "description": "claims/ directory structure created with claims.json, sources/, and history/ subdirectories"},
+        {"name": "verification-attempted", "description": "Verification was dispatched — evidence of WebFetch calls or agent dispatches for the Wikipedia URLs"},
+        {"name": "summary-presented", "description": "A verification summary was shown indicating how many claims verified, deviated, or had unavailable sources"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "what's the status of my claims? I submitted some earlier and want to see what needs attention",
+      "expected_output": "The skill should recognize this as a dashboard request, read the claims.json, and render a properly formatted dashboard showing claims grouped by status with action hints for deviated claims.",
+      "files": [],
+      "assertions": [
+        {"name": "mode-inferred", "description": "Correctly interpreted 'what's the status' as dashboard mode without confusion or asking for clarification"},
+        {"name": "grouped-by-status", "description": "Claims displayed grouped by status categories (deviated, verified, unverified, etc.)"},
+        {"name": "action-hints", "description": "Deviated claims include actionable next-step hints like 'use /claims inspect' or 'use /claims resolve'"},
+        {"name": "formatting-quality", "description": "Dashboard uses markdown tables with claim IDs, truncated statements, and status information"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have a claims.json with some deviated claims. Can you show me the details on the quantum computing claim and help me resolve it? The claim ID is claim-c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "expected_output": "The skill should first inspect the claim (showing deviation details, type, severity, source excerpt), then transition to resolve mode presenting the user with resolution options via AskUserQuestion.",
+      "files": [
+        {
+          "path": "claims/claims.json",
+          "description": "Pre-populated claims registry with the sample data from the plugin's examples"
+        }
+      ],
+      "assertions": [
+        {"name": "correct-claim-found", "description": "Located the quantum computing claim by its ID and displayed the correct statement"},
+        {"name": "deviation-details-shown", "description": "Shows the deviation type (data_staleness), severity (medium), source excerpt, and explanation"},
+        {"name": "evidence-included", "description": "The verbatim source excerpt is shown before asking the user to make a resolution decision"},
+        {"name": "resolution-options-presented", "description": "All 5 resolution options (correct, dispute, alternative source, discard, accept as-is) are documented"}
+      ]
+    }
+  ]
+}

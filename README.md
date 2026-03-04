@@ -60,35 +60,51 @@ Or just describe what you want in natural language — the plugin figures out th
 
 ## Example
 
-You're writing a report and cite a stat: *"The global AI market will reach $1.8 trillion by 2030."*
+You ask Claude to research a topic. It produces sourced findings:
+
+> **You:** Research the current state of LLM citation accuracy.
+
+Claude writes a paragraph with inline citations:
+
+> Studies show that 14–95% of LLM citations are hallucinated depending on domain
+> ([GhostCite, 2025](https://arxiv.org/html/2602.06718)), and AI search engines
+> fail to produce accurate citations in over 60% of tests
+> ([CJR Tow Center, 2025](https://www.cjr.org/tow_center/we-compared-eight-ai-search-engines-theyre-all-bad-at-citing-news.php)).
+
+Now you verify:
+
+> **You:** Verify those claims.
 
 ```
-> /claims submit "The global AI market will reach $1.8T by 2030"
-  --source "https://example.com/ai-forecast" --title "AI Market Report"
+Verifying 2 claims against 2 sources...
 
-Submitted claim-a1b2c3d4.
+  claim-a1b2  VERIFIED
+  claim-c3d4  DEVIATED (medium)
+    Claim says "over 60%", source says "more than half"
+    — the figure appears overstated relative to the source's wording.
+```
 
-> /claims verify
+> **You:** Resolve claim-c3d4.
 
-Verifying 1 claim against 1 source...
-
-  claim-a1b2c3d4  DEVIATED (high)
-  Claim says $1.8T, but source projects $800B–$1.5T.
-  The claim exceeds the upper bound of the source's projection.
-
-> /claims resolve claim-a1b2c3d4
-
-  Suggested correction: "The global AI market is projected
-  between $800B and $1.5T by 2030."
+```
+  Suggested correction: "fail to produce accurate citations
+  in more than half of tests"
 
   [Correct] [Dispute] [Alternative source] [Discard] [Accept as-is]
 ```
 
-The claim was wrong. Now you know — before your reader does.
+Results live in your project's `claims/` directory — browse them anytime:
+
+```
+claims/
+├── claims.json              # all claims with status + evidence
+├── sources/a1b2c3d4.json    # cached source content
+└── history/claim-c3d4.json  # audit trail for this claim
+```
 
 ## How it works
 
-Claims are stored in your project's `.claims/` directory as JSON. When you verify, the plugin dispatches a **claim-verifier** agent per unique source URL — each agent fetches the page once and checks all claims referencing it. For deviated claims, the **source-inspector** agent can open the source in Chrome and highlight the relevant passage so you can see the discrepancy in context.
+Claims are stored in your project's `claims/` directory as JSON. When you verify, the plugin dispatches a **claim-verifier** agent per unique source URL — each agent fetches the page once and checks all claims referencing it. For deviated claims, the **source-inspector** agent can open the source in Chrome and highlight the relevant passage so you can see the discrepancy in context.
 
 ## Components
 

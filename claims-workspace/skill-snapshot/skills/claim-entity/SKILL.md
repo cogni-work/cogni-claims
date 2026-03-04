@@ -1,21 +1,24 @@
 ---
 name: claim-entity
+version: 1.0.0
 description: |
-  Cross-plugin data model for claim verification — defines ClaimRecord, DeviationRecord,
-  and ResolutionRecord schemas, status transitions, deviation types, severity levels, and
-  workspace layout. Use this skill whenever you need to understand claim data structures,
-  create or validate claim records, check what fields a ClaimRecord has, understand deviation
-  types or severity levels, or work with the claims directory layout. Any plugin that submits
-  or consumes claims should consult this skill for the contract.
+  This skill should be used when any plugin or agent needs to understand the ClaimEntity schema,
+  "claim data model", "claim schema", "ClaimRecord fields", "DeviationRecord structure",
+  "claim contract", "deviation types", "deviation severity levels", "resolution actions",
+  "claim status transitions", "claim lifecycle states", or "workspace claims directory layout".
+  Internal contract definition — provides the cross-plugin data model and record type specifications
+  for claim lifecycle management in the cogni-claims verification system.
 ---
 
 # ClaimEntity Contract
 
-This skill defines the shared data model that all plugins use when working with claims. Think of it as the API contract — any plugin submitting claims for verification or reading verification results needs to follow these structures so the system works consistently.
+## Purpose
+
+Define the cross-plugin data model for claim verification and lifecycle management. Any plugin that submits claims for verification or consumes verification results MUST follow this contract.
 
 ## Core Data Model
 
-Three record types compose the claim lifecycle. For complete field definitions, JSON examples, and batch submission format, see `references/schema.md`.
+Three record types compose the claim lifecycle. For complete field definitions and examples, see `references/schema.md`.
 
 ### ClaimRecord
 
@@ -60,19 +63,13 @@ Claim state persists in the calling project's `claims/` directory:
 
 This skill defines the data structures; the `cogni-claims:claims` skill handles submission, verification, and query execution. To submit or query claims from another plugin, invoke `cogni-claims:claims` skill. See `references/schema.md` for batch submission format and query interfaces.
 
-## Design principles
+## Hard Rules
 
-These constraints exist because claim verification involves LLM-based judgment, which means the system can be wrong:
-
-- **User confirmation for all resolutions** — auto-resolving would risk silently accepting bad corrections or dismissing valid deviations. The user is the only authority on whether a deviation matters and what to do about it.
-
-- **Findings are assessments, not facts** — deviation detection compares text using an LLM, which can miss context, misinterpret nuance, or over-flag. Communicating findings as "the source appears to say X" rather than "the claim is wrong" keeps the user appropriately skeptical.
-
-- **Conservative over aggressive** — a false positive (flagging something that's actually fine) wastes the user's time and erodes trust in the system. When a comparison is genuinely ambiguous, not flagging is the safer choice.
-
-- **Always include the source excerpt** — without evidence, the user can't evaluate whether a finding is legitimate. The excerpt is what makes the system useful rather than just noisy.
-
-- **Unverifiable is not verified** — if a source can't be fetched, the claim's accuracy is unknown. Marking it as verified would be dishonest; `source_unavailable` correctly communicates the gap.
+- All resolutions require explicit user confirmation — never auto-resolve
+- Deviation detection is LLM-based — communicate findings as assessments, not facts
+- Prefer cautious "uncertain" findings over false-positive deviations
+- Always include the source excerpt as evidence
+- Never mark an unverifiable claim as verified
 
 ## Additional Resources
 
