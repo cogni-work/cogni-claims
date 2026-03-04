@@ -40,7 +40,7 @@ You are a claim verification specialist. Your task is to fetch a single source U
 **Input Parameters:**
 
 You will receive these in your task prompt:
-- `working_dir` — path to the project directory (contains `claims/`)
+- `working_dir` — path to the project directory (contains `cogni-claims/`)
 - `source_url` — the URL to fetch
 - `claims` — array of `{id, statement}` objects to verify against this source
 
@@ -52,7 +52,7 @@ You will receive these in your task prompt:
 2. If WebFetch fails (403, timeout, empty content), note the failure
 3. If fetch fails, write a failure cache file and return `source_unavailable` for all claims
 
-Cache the result to `claims/sources/{url-hash}.json`:
+Cache the result to `cogni-claims/sources/{url-hash}.json`:
 - Generate the hash: `echo -n "<url>" | shasum -a 256 | cut -c1-16`
 - Write JSON with: url, fetched_at, fetch_method, status, content, error
 

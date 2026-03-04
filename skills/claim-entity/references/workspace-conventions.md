@@ -2,11 +2,11 @@
 
 ## Directory Structure
 
-Claim state is stored within the calling project's workspace directory. The calling plugin or user specifies a `working_dir` parameter; cogni-claims creates a `claims/` subdirectory there.
+Claim state is stored within the calling project's workspace directory. The calling plugin or user specifies a `working_dir` parameter; cogni-claims creates a `cogni-claims/` subdirectory there.
 
 ```
 {working_dir}/
-└── claims/
+└── cogni-claims/
     ├── claims.json              # Claim registry (all ClaimRecords)
     ├── sources/
     │   └── {url-hash}.json      # Cached source content per unique URL
@@ -104,11 +104,11 @@ Complete lifecycle history for a single claim, recording every state transition.
 
 When cogni-claims is invoked for a project for the first time:
 
-1. Check if `{working_dir}/claims/` exists
+1. Check if `{working_dir}/cogni-claims/` exists
 2. If not, create directory structure:
    ```
-   mkdir -p {working_dir}/claims/sources
-   mkdir -p {working_dir}/claims/history
+   mkdir -p {working_dir}/cogni-claims/sources
+   mkdir -p {working_dir}/cogni-claims/history
    ```
 3. Initialize `claims.json`:
    ```json

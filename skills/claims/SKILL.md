@@ -45,7 +45,7 @@ Before any operation, make sure the workspace exists. Run the init script — it
 bash "${CLAUDE_PLUGIN_ROOT}/skills/claims/scripts/claims-store.sh" init "${working_dir}"
 ```
 
-The `working_dir` is either passed as a parameter or defaults to the current working directory. All claim state lives in `{working_dir}/claims/`.
+The `working_dir` is either passed as a parameter or defaults to the current working directory. All claim state lives in `{working_dir}/cogni-claims/`.
 
 ## Submit mode
 

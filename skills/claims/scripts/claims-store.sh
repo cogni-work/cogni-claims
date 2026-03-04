@@ -3,7 +3,7 @@
 # Usage: bash claims-store.sh <command> [args...]
 #
 # Commands requiring <working_dir>:
-#   init <working_dir>                    Initialize claims/ workspace
+#   init <working_dir>                    Initialize cogni-claims/ workspace
 #   read-claims <working_dir>             Read claims.json to stdout
 #   has-claims <working_dir>              Exit 0 if claims exist, 1 if empty
 #   count-by-status <working_dir>         Output JSON with counts per status
@@ -49,7 +49,7 @@ case "$COMMAND" in
   init)
     WORKING_DIR="${2:-}"
     [ -z "$WORKING_DIR" ] && usage
-    CLAIMS_DIR="$WORKING_DIR/claims"
+    CLAIMS_DIR="$WORKING_DIR/cogni-claims"
     mkdir -p "$CLAIMS_DIR/sources" "$CLAIMS_DIR/history"
     if [ ! -f "$CLAIMS_DIR/claims.json" ]; then
       NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -81,7 +81,7 @@ ENDJSON
   read-claims)
     WORKING_DIR="${2:-}"
     [ -z "$WORKING_DIR" ] && usage
-    CLAIMS_FILE="$WORKING_DIR/claims/claims.json"
+    CLAIMS_FILE="$WORKING_DIR/cogni-claims/claims.json"
     if [ -f "$CLAIMS_FILE" ]; then
       cat "$CLAIMS_FILE"
     else
@@ -93,7 +93,7 @@ ENDJSON
   has-claims)
     WORKING_DIR="${2:-}"
     [ -z "$WORKING_DIR" ] && usage
-    CLAIMS_FILE="$WORKING_DIR/claims/claims.json"
+    CLAIMS_FILE="$WORKING_DIR/cogni-claims/claims.json"
     if [ ! -f "$CLAIMS_FILE" ]; then
       exit 1
     fi
@@ -108,7 +108,7 @@ ENDJSON
   count-by-status)
     WORKING_DIR="${2:-}"
     [ -z "$WORKING_DIR" ] && usage
-    CLAIMS_FILE="$WORKING_DIR/claims/claims.json"
+    CLAIMS_FILE="$WORKING_DIR/cogni-claims/claims.json"
     if [ ! -f "$CLAIMS_FILE" ]; then
       echo "{\"error\":\"claims.json not found\"}" >&2
       exit 1

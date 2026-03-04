@@ -24,7 +24,7 @@ For each unique URL, attempt to retrieve the source content:
 2. **Fallback method**: If WebFetch fails (403, timeout, JS-rendered content), use browser automation to load the page and extract text
 3. **Failure handling**: If both methods fail, record the failure reason and mark all claims referencing this URL as `source_unavailable`
 
-Cache the fetched content in `claims/sources/{url-hash}.json` for subsequent queries.
+Cache the fetched content in `cogni-claims/sources/{url-hash}.json` for subsequent queries.
 
 ### Phase 3: Claim-Source Comparison
 

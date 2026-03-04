@@ -1,5 +1,10 @@
 # Runtime state (created per-project, not part of plugin)
-/claims/
+/cogni-claims/
+/.claims/
+/claims-workspace/
+
+# Logs
+excalidraw.log
 
 # Validation and test artifacts
 .test-results/

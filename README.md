@@ -66,10 +66,10 @@ After installing, type one prompt:
 
 Claude researches the topic, produces sourced findings, then automatically verifies each claim against its cited source. You'll see which claims check out and which don't — then you can resolve any deviations.
 
-Results land in your project's `claims/` directory:
+Results land in your project's `cogni-claims/` directory:
 
 ```
-claims/
+cogni-claims/
 ├── claims.json              # all claims with status + evidence
 ├── sources/                 # cached source content per URL
 └── history/                 # audit trail per claim
@@ -77,7 +77,7 @@ claims/
 
 ## How it works
 
-Claims are stored in your project's `claims/` directory as JSON. When you verify, the plugin dispatches a **claim-verifier** agent per unique source URL — each agent fetches the page once and checks all claims referencing it. For deviated claims, the **source-inspector** agent can open the source in Chrome and highlight the relevant passage so you can see the discrepancy in context.
+Claims are stored in your project's `cogni-claims/` directory as JSON. When you verify, the plugin dispatches a **claim-verifier** agent per unique source URL — each agent fetches the page once and checks all claims referencing it. For deviated claims, the **source-inspector** agent can open the source in Chrome and highlight the relevant passage so you can see the discrepancy in context.
 
 ## Components
 

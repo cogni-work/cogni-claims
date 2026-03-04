@@ -5,7 +5,7 @@ description: |
   and ResolutionRecord schemas, status transitions, deviation types, severity levels, and
   workspace layout. Use this skill whenever you need to understand claim data structures,
   create or validate claim records, check what fields a ClaimRecord has, understand deviation
-  types or severity levels, or work with the claims directory layout. Any plugin that submits
+  types or severity levels, or work with the cogni-claims directory layout. Any plugin that submits
   or consumes claims should consult this skill for the contract.
 ---
 
@@ -47,10 +47,10 @@ any status ──> re-verify          (returns to verified/deviated/source_unava
 
 ## Workspace Layout
 
-Claim state persists in the calling project's `claims/` directory:
+Claim state persists in the calling project's `cogni-claims/` directory:
 
 ```
-{working_dir}/claims/
+{working_dir}/cogni-claims/
 ├── claims.json          # Registry of all ClaimRecords
 ├── sources/{hash}.json  # Cached source content per URL
 └── history/{id}.json    # Audit trail per claim

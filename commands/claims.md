@@ -143,7 +143,7 @@ The command determines the working directory in this order:
 1. `--dir <path>` if provided
 2. Current working directory
 
-Claims state is stored in `{working_dir}/claims/`.
+Claims state is stored in `{working_dir}/cogni-claims/`.
 
 ## Integration
 
