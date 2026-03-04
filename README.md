@@ -29,9 +29,11 @@ A systematic claim-verification workflow for Claude Code. Other plugins generate
 
 ## What it means for you
 
-- **You catch errors before they ship.** Sourced claims get checked against the actual source — not taken on faith.
-- **You stay in control.** Deviation detection is LLM-based. Findings are assessments for you to review, not verdicts.
-- **You get an audit trail.** Every claim, verification result, and resolution decision is stored in `.claims/` as structured JSON.
+If you ship research, reports, or any content that leans on sourced claims, this is your safety net before publish.
+
+- **Catch errors before they reach your audience.** Sourced claims get checked against the actual source — not taken on faith.
+- **Stay in control.** Deviation detection is LLM-based. Findings are assessments for you to review, not verdicts.
+- **Keep a paper trail.** Every claim, verification result, and resolution decision is stored as structured JSON you can reference later.
 
 ## Installation
 
