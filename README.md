@@ -1,63 +1,58 @@
-# Claim Verification Plugin
+# cogni-claims
 
-A claim verification and source validation plugin primarily designed for [Cowork](https://claude.com/product/cowork), Anthropic's agentic desktop application — though it also works in Claude Code. Supports claim ingestion, source verification, deviation detection, claims dashboard review, source inspection, and user-guided resolution.
+A Claude Code plugin that verifies whether sourced claims actually match what their cited sources say.
 
-> **Important**: This plugin assists with verifying sourced claims against cited URLs but does not guarantee factual accuracy. Deviation detection is LLM-based and should not be treated as infallible. All verification results should be reviewed by the user before acting on them.
+LLM-generated content often cites sources but subtly misrepresents them — a number rounded too aggressively, a conclusion that goes beyond what the source says, context that changes the meaning. This plugin catches those gaps systematically by fetching cited URLs, comparing the claims against them, and guiding you through resolving any discrepancies.
+
+> **Note**: Deviation detection is LLM-based. Findings are assessments for you to review, not verdicts. You always have final say.
+
+## What it does
+
+1. **Submit** claims with their source URLs — individually or batch-imported from markdown
+2. **Verify** them by fetching each source and detecting deviations (misquotation, unsupported conclusions, selective omission, data staleness, source contradiction)
+3. **Review** a dashboard showing all claims grouped by status, with inline deviation summaries and severity indicators
+4. **Inspect** flagged claims by opening the source in your browser with the relevant passage highlighted for side-by-side comparison
+5. **Resolve** each deviation — correct the claim, dispute the finding, find an alternative source, discard, or accept as-is
 
 ## Installation
 
 ```bash
-claude plugins add insight-wave-marketplace/cogni-claims
+claude plugins add cogni-work/cogni-claims
 ```
 
-## Commands
+## Quick start
 
-| Command | Description |
-|---------|-------------|
-| `/claims submit` | Claim ingestion — submit individual claims or batch-import from context, each with a source URL and title for tracking |
-| `/claims verify` | Source verification — fetch cited URLs and detect deviations (misquotation, unsupported conclusion, selective omission, data staleness, source contradiction) |
-| `/claims dashboard` | Claims dashboard — review all claims grouped by status with severity indicators and resolution options |
-| `/claims inspect` | Source inspection — open a source page with the relevant passage highlighted for in-context review |
-| `/claims resolve` | Claim resolution — correct, flag, find alternative sources, discard, or accept claims with user-guided decisions |
+```
+/claims submit --batch        # submit claims from a markdown file with citations
+/claims verify                # verify all unverified claims against their sources
+/claims dashboard             # see what needs attention
+/claims inspect <claim-id>    # open the source in your browser to compare
+/claims resolve <claim-id>    # decide what to do about a deviation
+```
 
-## Skills
+Or just describe what you want in natural language — the plugin figures out the right mode:
 
-| Skill | Description |
-|-------|-------------|
-| `claims` | Main orchestrator for claim lifecycle: ingestion, parallel verification against cited sources, dashboard presentation, and resolution workflows |
-| `claim-entity` | Cross-plugin contract defining the ClaimEntity schema (claim records, deviation records, resolution records) and workspace conventions |
+- "verify the claims in my research report"
+- "what's the status of my claims?"
+- "show me what the source actually says for that quantum computing claim"
+- "let's fix the deviated claims one by one"
 
-## Example Workflows
+## How it works
 
-### Verify Claims from a Research Report
+Claims are stored in your project's `.claims/` directory as JSON. When you verify, the plugin dispatches a **claim-verifier** agent per unique source URL — each agent fetches the page once and checks all claims referencing it. For deviated claims, the **source-inspector** agent can open the source in Chrome and highlight the relevant passage so you can see the discrepancy in context.
 
-1. Run `/claims submit --batch` with a markdown file containing sourced claims
-2. Run `/claims verify` to check all unverified claims against their cited sources
-3. Run `/claims dashboard` to review findings grouped by status and severity
-4. Run `/claims inspect claim-abc123` to see a flagged source passage in context
-5. Run `/claims resolve claim-abc123` to correct or accept the claim
+The plugin is designed for cross-plugin use. Other plugins (like `cogni-research` or `cogni-portfolio`) can submit claims programmatically, and you verify and resolve them here.
 
-### Single Claim Verification
+## Components
 
-1. Run `/claims submit "The AI market will reach $1.8T by 2030" --source "https://example.com/report" --title "AI Forecast"`
-2. Run `/claims verify` to fetch the source and check for deviations
-3. Run `/claims dashboard` to review the result
+| Component | Type | What it does |
+|-----------|------|--------------|
+| `claims` | skill | Main orchestrator — handles all five modes (submit, verify, dashboard, inspect, resolve) |
+| `claim-entity` | skill | Cross-plugin data contract — defines ClaimRecord, DeviationRecord, and ResolutionRecord schemas |
+| `claim-verifier` | agent | Fetches a source URL and verifies all claims referencing it |
+| `source-inspector` | agent | Opens a source in the browser and highlights the relevant passage |
+| `/claims` | command | Slash command entry point for all modes |
 
-### Cross-Plugin Claim Handoff
+## License
 
-1. Another plugin (e.g., `cogni-research`) submits claims via the `cogni-claims:claims` skill with mode `submit`
-2. Run `/claims verify` to verify the submitted claims
-3. Run `/claims dashboard` to review results and resolve any deviations
-
-## Agents
-
-| Agent | Description |
-|-------|-------------|
-| `claim-verifier` | Verification worker — fetches one source URL and verifies all claims referencing it, returning deviation analysis as compact JSON |
-| `source-inspector` | Browser inspector — opens a source URL and highlights the relevant passage for user review before resolution decisions |
-
-## Configuration
-
-Claim state is stored within the calling project's workspace under `.claims/`. No additional MCP servers or external configuration are required — the plugin uses web fetching to retrieve cited sources directly.
-
-> **Note:** For JavaScript-rendered or paywalled pages, the plugin falls back to browser automation via the `source-inspector` agent.
+[MIT](LICENSE)
