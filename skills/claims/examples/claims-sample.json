@@ -11,7 +11,17 @@
       "submitted_at": "2026-02-23T14:30:00Z",
       "status": "resolved",
       "verified_at": "2026-02-23T14:35:00Z",
-      "deviations": [],
+      "deviations": [
+        {
+          "id": "dev-f1e2d3c4-b5a6-4978-8069-1a2b3c4d5e6f",
+          "claim_id": "claim-a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+          "type": "unsupported_conclusion",
+          "severity": "high",
+          "source_excerpt": "The report states AI market growth is projected between $800B and $1.5T by 2030.",
+          "explanation": "The claim states $1.8 trillion, but the source projects a range of $800B to $1.5T. The claim appears to exceed the upper bound of the source's projection.",
+          "detected_at": "2026-02-23T14:35:00Z"
+        }
+      ],
       "resolution": {
         "id": "res-01234567-89ab-4cde-f012-3456789abcde",
         "claim_id": "claim-a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
