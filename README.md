@@ -2,6 +2,8 @@
 
 A Claude Code plugin that verifies whether sourced claims actually match what their cited sources say.
 
+<!-- CLA test: this change will be reverted -->
+
 ## Why this exists
 
 LLMs cite sources confidently — but the citations are often wrong. Numbers get rounded into different claims, conclusions overshoot what the source actually says, and URLs sometimes point to pages that don't exist. The gap between "cited" and "correct" is large enough to cause real harm, and it's well-documented:
