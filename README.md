@@ -89,6 +89,21 @@ Claims are stored in your project's `cogni-claims/` directory as JSON. When you 
 | `source-inspector` | agent | Opens a source in the browser and highlights the relevant passage |
 | `/claims` | command | Slash command entry point for all modes |
 
+## Architecture
+
+```
+cogni-claims/
+├── .claude-plugin/plugin.json    Plugin manifest
+├── skills/                       2 verification skills
+│   ├── claims/
+│   └── claim-entity/
+├── agents/                       2 verification agents
+│   ├── claim-verifier.md
+│   └── source-inspector.md
+└── commands/                     1 slash command
+    └── claims.md
+```
+
 ## License
 
 [AGPL-3.0](LICENSE)
