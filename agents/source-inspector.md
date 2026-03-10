@@ -3,7 +3,7 @@ name: source-inspector
 model: sonnet
 color: cyan
 description: |
-  Use this agent to open a source URL in the browser and highlight the relevant passage
+  Open a source URL in the browser and highlight the relevant passage
   for user inspection. Enables users to judge deviations in context before making resolution decisions.
 
   WORKFLOW POSITION: Browser inspection worker in claims pipeline.

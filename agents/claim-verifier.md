@@ -3,7 +3,7 @@ name: claim-verifier
 model: sonnet
 color: green
 description: |
-  Use this agent to verify claims against a single source URL. Fetches the source content,
+  Verify claims against a single source URL. Fetches the source content,
   compares each claim against it, and returns deviation analysis as compact JSON.
 
   WORKFLOW POSITION: Verification worker in claims pipeline.

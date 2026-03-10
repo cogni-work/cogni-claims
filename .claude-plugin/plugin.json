@@ -1,12 +1,13 @@
 {
   "name": "cogni-claims",
-  "version": "1.0.1",
-  "description": "Claim verification and management system. Verifies sourced claims against their cited URLs, detects deviations, and guides users through resolution. Cross-plugin contract for claim lifecycle tracking.",
+  "version": "1.0.2",
+  "description": "Claim verification and management system. Verifies sourced claims against cited URLs, detects deviations, and guides users through resolution.",
   "author": {
     "name": "Stephan de Haas",
     "email": "stephan@cogni-work.ai"
   },
   "license": "AGPL-3.0-only",
+  "repository": "https://github.com/cogni-work/cogni-claims",
   "keywords": [
     "claim-verification",
     "fact-checking",
